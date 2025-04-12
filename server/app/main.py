@@ -1,6 +1,6 @@
 # app/main.py
 import pathlib
-from fastapi import FastAPI, HTTPException, Request, status as http_status
+from fastapi import FastAPI, HTTPException, Request, status as http_status, Query
 from fastapi.responses import FileResponse
 from app.schemas import AudioGenerationRequest, TaskSubmissionResponse, TaskStatusResponse
 from app.celery_worker import celery_app
@@ -142,6 +142,53 @@ async def download_audio_file(task_id: str):
     file_path = pathlib.Path(file_path_str)
 
     return FileResponse(path=file_path, media_type="audio", filename=file_path.name)
+
+
+@app.delete("/tasks/{task_id}", response_model=TaskStatusResponse, status_code=http_status.HTTP_200_OK, tags=["Task Management"])
+async def stop_task(
+    task_id: str,
+    terminate: bool = Query(False, description="Set to true to attempt terminating a running task (sends SIGTERM). Requires process-based pool."),
+    signal: str = Query("TERM", description="Signal to send if terminate=true (e.g., TERM, KILL). Use KILL with extreme caution.")
+):
+    """
+    Revokes or terminates a Celery task.
+
+    - By default (`terminate=false`), prevents the task from running if pending.
+    - If `terminate=true`, attempts to stop a *currently running* task by sending a signal (default SIGTERM).
+      This works best with the 'prefork' pool and is not guaranteed to succeed immediately or cleanly.
+    - Using `terminate=true` with `signal=KILL` forcefully terminates the task process, risking data loss.
+    """
+    logger.info(f"Received request to stop task {task_id} (terminate={terminate}, signal={signal})")
+
+    if terminate and signal.upper() not in ('TERM', 'KILL'):
+         raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail="Invalid signal specified. Use 'TERM' or 'KILL'."
+         )
+
+    try:
+        celery_app.control.revoke(task_id, terminate=terminate, signal=signal.upper())
+        message = f"Revoke command sent for task {task_id}."
+        if terminate:
+            message += f" Termination requested with signal {signal.upper()}."
+        else:
+            message += " Task will not be executed if still pending."
+
+        logger.info(message)
+
+        task_result = AsyncResult(task_id, app=celery_app)
+        return TaskStatusResponse(
+            task_id=task_id,
+            status=task_result.status,
+            result={"message": message}
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to send revoke command for task {task_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to send revoke/terminate command for task {task_id}."
+        )
 
 
 
