@@ -4,17 +4,18 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - python=3.
+  - python=3
   - pip
-  - fastapi
-  - uvicorn[standard] # Includes websockets, http-tools, etc.
-  - celery >=5.0 # Ensure version 5+
-  - redis-py # Python client for Redis
-  - redis # The actual redis server (optional, if you want conda to manage it)
-  - sqlalchemy 
-  - pydantic >=2.0
-  - pydantic-settings
-  - python-dotenv
   - pip:
-      - pyttsx3
-      - elevenlabs
+    - fastapi
+    - uvicorn[standard] # Includes websockets, http-tools, etc.
+    - python-dotenv
+    - pydantic >=2.0
+    - pydantic-settings
+    - celery[redis]
+    - sqlalchemy
+    - redis
+    - pyttsx3
+    - elevenlabs
+    - kokoro_onnx
+    - soundfile

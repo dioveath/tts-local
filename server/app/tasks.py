@@ -7,6 +7,7 @@ import logging
 import pathlib
 import time
 
+from app.audio_module.kokoro_module import KokoroAudio
 from app.celery_worker import celery_app
 from app.config import settings
 
@@ -66,6 +67,10 @@ def generate_audio_task(self: Task, engine: str, text: str, engine_options: Opti
     try:
         if engine == "pyttsx3":
             _generate_pyttsx3(self, text, engine_options, output_path)
+        elif engine == "kokoro":
+            kokoro_engine = KokoroAudio()
+            voice = engine_options.get("voice", "am_michael") if engine_options else "am_michael"
+            kokoro_engine.generate_audio(text, output_path.as_posix(), voice=voice, voice_settings=engine_options)
         else:
             logger.error(f"[Task {task_id}] Unsupported engine specified: {engine}")
             self.update_state(

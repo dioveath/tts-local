@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, HttpUrl
 from typing import Literal, Dict, Any, Optional, Union
 
 class AudioGenerationRequest(BaseModel):
-    engine: Literal["pyttsx3", "elevenlabs"]
+    engine: Literal["pyttsx3", "kokoro"]
     text: str = Field(..., min_length=1, description="Text to synthesize")
     engine_options: Optional[Dict[str, Any]] = Field(default=None, description="Engine-specific options (e.g., voice_id, rate)")
     output_format: Literal["mp3", "wav"] = Field(default="mp3", description="Desired output audio format")

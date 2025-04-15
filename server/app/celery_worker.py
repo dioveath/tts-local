@@ -4,12 +4,18 @@ from celery import Celery
 from app.config import settings
 
 celery_broker_url_str = str(settings.celery_broker_url) if settings.celery_broker_url else None
+celery_result_backend_str: str = "redis://localhost:6379/1"
+
+print(f"--- Initializing Celery ---") # Add print for visibility
+print(f"Broker URL for Celery init: '{celery_broker_url_str}' (Type: {type(celery_broker_url_str)})")
+print(f"Backend URL for Celery init: '{celery_result_backend_str}' (Type: {type(celery_result_backend_str)})")
+print(f"--- End Celery Init Args ---")
 
 os.environ.setdefault("FORKED_BY_MULTIPROCESSING", "1")  # Required for Windows
 celery_app = Celery(
     "audio_tasks", # Arbitrary name for the task namespace
     broker=celery_broker_url_str,
-    backend=settings.celery_result_backend,
+    backend=celery_result_backend_str,
     include=["app.tasks"] # List of modules where tasks are defined
 )
 

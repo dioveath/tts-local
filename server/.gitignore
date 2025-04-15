@@ -140,3 +140,7 @@ cython_debug/
 # Project Specific
 output_audio/
 celerybeat-schedule # Celery Beat schedule file
+
+# Kokoro Files
+app/services/kokoro/kokoro-v1.0.onnx
+app/services/kokoro/voices-v1.0.bin

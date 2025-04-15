@@ -41,6 +41,14 @@ async def submit_audio_generation(
     payload: AudioGenerationRequest
 ):
     try:
+        actual_backend_url = celery_app.conf.get('result_backend')
+        logger.info(f"Celery app result backend: {actual_backend_url}")
+        logger.info(f"Type of configured backend: {type(actual_backend_url)}")
+
+        actual_broker_url = celery_app.conf.get('broker_url')
+        logger.info(f"Celery app broker URL: {actual_broker_url}")
+        logger.info(f"Type of configured broker URL: {type(actual_broker_url)}")
+
         task = celery_app.send_task(
             'app.tasks.generate_audio_task',
             args=[

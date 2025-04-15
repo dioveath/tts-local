@@ -2,7 +2,7 @@
 import os
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import DirectoryPath, AnyUrl, SecretStr, model_validator
+from pydantic import DirectoryPath, AnyUrl, SecretStr
 import pathlib
 
 
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     )
 
     celery_broker_url: AnyUrl = "redis://localhost:6379/0"
-    celery_result_backend: str = f"db+sqlite:///./celery_results.db"
+    celery_result_backend: str = "db+sqlite:///./celery_results.db"
     
     output_audio_dir: DirectoryPath = pathlib.Path("./output_audio")
 
