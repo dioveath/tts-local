@@ -2,6 +2,7 @@
 import pathlib
 from fastapi import FastAPI, HTTPException, Request, status as http_status, Query
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from app.schemas import AudioGenerationRequest, TaskSubmissionResponse, TaskStatusResponse
 from app.celery_worker import celery_app
 from celery.result import AsyncResult
@@ -17,6 +18,21 @@ app = FastAPI(
     title="Asynchronous AI Audio Generation API",
     description="Submit and manage AI audio generation tasks.",
     version="0.1.0"
+)
+
+origins = [
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://192.168.1.87:5174",
+    # Add your production frontend URL here if applicable
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
 )
 
 
