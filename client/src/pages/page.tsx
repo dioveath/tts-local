@@ -12,6 +12,7 @@ import { useState } from 'react'
 import { RotateCw } from 'lucide-react'
 import { ApiService } from '@/services/api-service'
 import { AudioGenerationRequest } from '@/types/global.types'
+import GenerationCardItem from '@/components/GenerationCardItem'
 
 const FormSchema = z.object({
   text: z
@@ -73,14 +74,9 @@ export function HomePage() {
           </Button>
         </form>
       </Form>
-
       {lastGeneratedId && (
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold mb-2">Task ID:</h2>
-          <p className="text-gray-600">{lastGeneratedId}</p>
-          <a href={ApiService.getDownloadAudioUrl(lastGeneratedId)} download>
-            Download Now
-          </a>
+        <div className="w-2/3">
+          <GenerationCardItem generationId={lastGeneratedId} taskId={lastGeneratedId} />
         </div>
       )}
     </div>
