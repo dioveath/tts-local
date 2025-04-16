@@ -15,6 +15,7 @@ import { AudioWaveform, Command, GalleryVerticalEnd, Home } from 'lucide-react'
 import { NavMain } from './nav-main'
 import { NavGenerations } from './nav-generations'
 import { ModeToggle } from './mode-toggle'
+import { StorageService } from '@/services/storage-service'
 
 interface AppSidebarProps {
   items?: string[]
@@ -46,25 +47,9 @@ const pages = [
   }
 ]
 
-const generations = [
-  {
-    name: 'Generation 1',
-    url: '#',
-    emoji: '1'
-  },
-  {
-    name: 'Generation 2',
-    url: '#',
-    emoji: '2'
-  },
-  {
-    name: 'Generation 3',
-    url: '#',
-    emoji: '3'
-  }
-]
-
 const AppSidebar: React.FC<AppSidebarProps> = ({ items = [] }) => {
+  const generations = StorageService.getGenerations()
+
   return (
     <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader>

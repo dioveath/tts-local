@@ -24,6 +24,7 @@ import {
   BreadcrumbSeparator,
   BreadcrumbPage
 } from '@/components/ui/breadcrumb'
+import { StorageService } from '@/services/storage-service'
 
 const FormSchema = z.object({
   text: z
@@ -54,6 +55,12 @@ export function HomePage() {
       }
 
       const statusResponse = await ApiService.generateAudio(request)
+      StorageService.addGeneration({
+        id: statusResponse.task_id,
+        name: data.text.substring(0, 20) + '...',
+        createdAt: new Date().toISOString(),
+        url: ApiService.getDownloadAudioUrl(statusResponse.task_id)
+      })
       toast.success(`You submitted the following values: ${JSON.stringify(data)}`)
       setLastGeneratedId(statusResponse.task_id)
     } catch (error: any) {

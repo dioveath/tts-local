@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowUpRight, Link, MoreHorizontal, StarOff, Trash2 } from 'lucide-react'
+import { ArrowUpRight, Download, Link, MoreHorizontal, StarOff, Trash2 } from 'lucide-react'
 
 import {
   DropdownMenu,
@@ -18,29 +18,33 @@ import {
   SidebarMenuItem,
   useSidebar
 } from '@/components/ui/sidebar'
+import { Generation, StorageService } from '@/services/storage-service'
 
-export function NavGenerations({
-  generations
-}: {
-  generations: {
-    name: string
-    url: string
-    emoji: string
-  }[]
-}) {
+export function NavGenerations({ generations }: { generations: Generation[] }) {
   const { isMobile } = useSidebar()
+
+  const handleDelete = (id: string) => {
+    StorageService.removeGeneration(id)
+    // Refresh the page to update the UI
+    window.location.reload()
+  }
+
+  const handleCopy = (url: string) => {
+    navigator.clipboard.writeText(url)
+  }
+
+  const handleDownload = (url: string) => {
+    window.open(url, '_blank')
+  }
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Generations</SidebarGroupLabel>
       <SidebarMenu>
-        {generations.map((item) => (
+        {generations.map((item: Generation) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
-              <a href={item.url} title={item.name}>
-                <span>{item.emoji}</span>
-                <span>{item.name}</span>
-              </a>
+            <SidebarMenuButton>
+              <span>{item.name}</span>
             </SidebarMenuButton>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -54,21 +58,16 @@ export function NavGenerations({
                 side={isMobile ? 'bottom' : 'right'}
                 align={isMobile ? 'end' : 'start'}
               >
-                <DropdownMenuItem>
-                  <StarOff className="text-muted-foreground" />
-                  <span>Remove from Favorites</span>
+                <DropdownMenuItem onClick={() => handleDownload(item.url)}>
+                  <Download className="text-muted-foreground" />
+                  <span>Download</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleCopy(item.url)}>
                   <Link className="text-muted-foreground" />
                   <span>Copy Link</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <ArrowUpRight className="text-muted-foreground" />
-                  <span>Open in New Tab</span>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDelete(item.id)}>
                   <Trash2 className="text-muted-foreground" />
                   <span>Delete</span>
                 </DropdownMenuItem>
