@@ -2,6 +2,6 @@
 __pycache__
 *.pyc
 celery_results.db
-# *.onnx # If large and downloaded/mounted separately
-# *.bin # If large and downloaded/mounted separately
+*.onnx # If large and downloaded/mounted separately
+*.bin # If large and downloaded/mounted separately
 .env*
