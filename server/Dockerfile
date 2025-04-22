@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-ARG KOKORO_MODEL_DIR=/app/app/services/kokoro
+ARG KOKORO_MODEL_DIR=app/app/services/kokoro
 ENV KOKORO_MODEL_DIR=$KOKORO_MODEL_DIR
 
 RUN mkdir -p ${KOKORO_MODEL_DIR} \
