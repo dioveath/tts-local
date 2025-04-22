@@ -1,0 +1,12 @@
+# .dockerignore (in root)
+.git
+.vscode
+**/__pycache__
+**/.DS_Store
+client/node_modules
+client/dist
+server/celery_results.db
+redis-data
+*.env
+docker-compose.yml # Usually not needed inside images
+README.md

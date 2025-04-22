@@ -1,0 +1,5 @@
+# client/.dockerignore
+node_modules
+dist
+.env*
+.eslint.config.js # Build artifacts/configs often not needed in final image

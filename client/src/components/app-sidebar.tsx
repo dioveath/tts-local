@@ -37,7 +37,7 @@ const pages = [
   }
 ]
 
-const AppSidebar: React.FC<AppSidebarProps> = ({ items = [] }) => {
+const AppSidebar: React.FC<AppSidebarProps> = () => {
   const generations = StorageService.getGenerations()
 
   return (

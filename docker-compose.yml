@@ -1,0 +1,71 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  redis:
+    image: redis:alpine
+    container_name: redis
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
+  backend-api:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: backend-api
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./server:/app
+    ports:
+      - 4100:8000
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - OUTPUT_AUDIO_DIR=/app/output_audio
+    networks:
+      - app-network
+    depends_on:
+      - redis
+
+  worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: celery-worker
+    command: celery -A app.celery_worker worker --loglevel=info
+    volumes:
+      - ./server:/app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    networks:
+      - app-network
+    depends_on:
+      - redis
+      - backend-api
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.prod
+    container_name: frontend-nginx
+    ports:
+      - 4000:80
+    networks:
+      - app-network
+    depends_on:
+      - backend-api
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+
+
+    
+
+    
