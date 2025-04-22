@@ -1,15 +1,5 @@
 import React from 'react'
-import {
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarFooter,
-  SidebarMenuButton
-} from '@/components/ui/sidebar'
+import { Sidebar, SidebarHeader, SidebarContent, SidebarFooter } from '@/components/ui/sidebar'
 import { ProjectSwitcher } from './project-switcher'
 import { AudioWaveform, Command, GalleryVerticalEnd, Home } from 'lucide-react'
 import { NavMain } from './nav-main'
@@ -42,7 +32,7 @@ const projects = [
 const pages = [
   {
     title: 'Home',
-    url: '#',
+    url: '/',
     icon: Home
   }
 ]

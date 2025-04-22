@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowUpRight, Download, Link, MoreHorizontal, StarOff, Trash2 } from 'lucide-react'
+import { Download, Link, MoreHorizontal, Trash2, Play, Pause } from 'lucide-react'
 
 import {
   DropdownMenu,
@@ -19,9 +19,12 @@ import {
   useSidebar
 } from '@/components/ui/sidebar'
 import { Generation, StorageService } from '@/services/storage-service'
+import { useState } from 'react'
 
 export function NavGenerations({ generations }: { generations: Generation[] }) {
   const { isMobile } = useSidebar()
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
+  const [playingUrl, setPlayingUrl] = useState<string | null>(null)
 
   const handleDelete = (id: string) => {
     StorageService.removeGeneration(id)
@@ -35,6 +38,24 @@ export function NavGenerations({ generations }: { generations: Generation[] }) {
 
   const handleDownload = (url: string) => {
     window.open(url, '_blank')
+  }
+
+  const handlePreview = (url: string) => {
+    if (playingUrl === url && currentAudio) {
+      currentAudio.pause()
+      currentAudio.currentTime = 0
+      setPlayingUrl(null)
+      setCurrentAudio(null)
+    } else {
+      if (currentAudio) {
+        currentAudio.pause()
+        currentAudio.currentTime = 0
+      }
+      const audio = new Audio(url)
+      audio.play()
+      setCurrentAudio(audio)
+      setPlayingUrl(url)
+    }
   }
 
   return (
@@ -66,6 +87,17 @@ export function NavGenerations({ generations }: { generations: Generation[] }) {
                   <Link className="text-muted-foreground" />
                   <span>Copy Link</span>
                 </DropdownMenuItem>
+                {playingUrl === item.url ? (
+                  <DropdownMenuItem onClick={() => handlePreview(item.url)}>
+                    <Pause className="text-muted-foreground" />
+                    <span>Stop</span>
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => handlePreview(item.url)}>
+                    <Play className="text-muted-foreground" />
+                    <span>Preview</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleDelete(item.id)}>
                   <Trash2 className="text-muted-foreground" />
