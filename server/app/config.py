@@ -23,7 +23,6 @@ class Settings(BaseSettings):
     celery_result_backend: str = "db+sqlite:///./celery_results.db"
     
     output_audio_dir: DirectoryPath = pathlib.Path("./output_audio")
-
     elevenlabs_api_key: Optional[SecretStr] = None
 
 

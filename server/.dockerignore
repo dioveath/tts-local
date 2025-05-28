@@ -5,3 +5,4 @@ celery_results.db
 *.onnx # If large and downloaded/mounted separately
 *.bin # If large and downloaded/mounted separately
 .env*
+output_audio

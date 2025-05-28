@@ -10,6 +10,7 @@ import time
 from app.audio_module.kokoro_module import KokoroAudio
 from app.celery_worker import celery_app
 from app.config import settings
+from app.services.minio.minio_client import minio_client, minio_public_endpoint, bucket_name
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -71,6 +72,7 @@ def generate_audio_task(self: Task, engine: str, text: str, engine_options: Opti
             kokoro_engine = KokoroAudio()
             voice = engine_options.get("voice", "am_michael") if engine_options else "am_michael"
             kokoro_engine.generate_audio(text, output_path.as_posix(), voice=voice, voice_settings=engine_options)
+            
         else:
             logger.error(f"[Task {task_id}] Unsupported engine specified: {engine}")
             self.update_state(
@@ -87,9 +89,16 @@ def generate_audio_task(self: Task, engine: str, text: str, engine_options: Opti
             )
              raise Ignore()
 
+        minio_client.fput_object(bucket_name, output_filename, output_path.as_posix())
+        output_url = f"{minio_public_endpoint}/{bucket_name}/{output_filename}"
+
+        # Delete local file after successful upload to MinIO
+        output_path.unlink()
+        
         logger.info(f"[Task {task_id}] Task completed successfully. Output: {output_path}")
         return {
             "output_path": str(output_path),
+            "output_url": str(output_url),
             "engine": engine,
             "format": file_extension,
             "timestamp": time.time()

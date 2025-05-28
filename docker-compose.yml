@@ -25,7 +25,6 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
-      - CELERYD_MAX_TASKS_PER_CHILD=100
       - OUTPUT_AUDIO_DIR=/app/output_audio      
     networks:
       - app-network
@@ -44,11 +43,20 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - CELERYD_MAX_TASKS_PER_CHILD=100
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_PUBLIC_ENDPOINT=${MINIO_PUBLIC_ENDPOINT}
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET_NAME=audio-storage
+      - MINIO_SECURE=False
     networks:
       - app-network
     depends_on:
       - redis
       - backend-api
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   frontend:
     build:
@@ -57,7 +65,7 @@ services:
     restart: always
     container_name: frontend-nginx
     ports:
-      - 4000:80
+      - 4101:80
     networks:
       - app-network
     depends_on:
