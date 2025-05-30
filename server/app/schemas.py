@@ -2,11 +2,36 @@
 from pydantic import BaseModel, Field, HttpUrl
 from typing import Literal, Dict, Any, Optional, Union
 
+
+class EngineOptions(BaseModel):
+    voice: str = Field(..., description="Voice to use for synthesis")
+
+class CaptionSettings(BaseModel):
+    max_line_count: int
+    max_line_length: int
+    font_name: str
+    font_size: int
+    primary_colour: str
+    secondary_colour: str
+    outline_colour: str
+    back_colour: str
+    bold: int
+    italic: int
+    underline: int
+    strikeout: int
+    outline: int
+    border_style: int
+    alignment: int
+    playres_x: int
+    playres_y: int
+    timer: int
+
 class AudioGenerationRequest(BaseModel):
     engine: Literal["pyttsx3", "kokoro"]
     text: str = Field(..., min_length=1, description="Text to synthesize")
-    engine_options: Optional[Dict[str, Any]] = Field(default=None, description="Engine-specific options (e.g., voice_id, rate)")
-    output_format: Literal["mp3", "wav"] = Field(default="mp3", description="Desired output audio format")
+    engine_options: Optional[EngineOptions] = Field(default=None, description="Engine-specific options (e.g., voice_id, rate)")
+    output_format: Literal["mp3"] = Field(default="mp3", description="Desired output audio format") # TODO: Add more formats
+    caption_settings: Optional[CaptionSettings] = Field(default=None, description="Caption settings for the audio")
 
 
 class TaskSubmissionResponse(BaseModel):

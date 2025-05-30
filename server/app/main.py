@@ -65,13 +65,16 @@ async def submit_audio_generation(
         logger.info(f"Celery app broker URL: {actual_broker_url}")
         logger.info(f"Type of configured broker URL: {type(actual_broker_url)}")
 
+        caption_settings_args = payload.caption_settings.model_dump(mode='json') if payload.caption_settings else None
+
         task = celery_app.send_task(
             'app.tasks.generate_audio_task',
             args=[
                 payload.engine,
                 payload.text,
                 payload.engine_options,
-                payload.output_format
+                payload.output_format,
+                caption_settings_args
             ],
         )
         task_id = task.id

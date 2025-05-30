@@ -11,6 +11,8 @@ from app.audio_module.kokoro_module import KokoroAudio
 from app.celery_worker import celery_app
 from app.config import settings
 from app.services.minio.minio_client import minio_client, minio_public_endpoint, bucket_name
+from app.services.subtitles.subtitle_generator import SubtitleGenerator
+from app.schemas import EngineOptions, CaptionSettings
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -54,14 +56,14 @@ def _generate_pyttsx3(task: Task, text: str, engine_options: Optional[Dict], out
 
 
 @celery_app.task(bind=True, name='app.tasks.generate_audio_task', acks_late=True)
-def generate_audio_task(self: Task, engine: str, text: str, engine_options: Optional[Dict], output_format: str):
+def generate_audio_task(self: Task, engine: str, text: str, engine_options: Optional[EngineOptions], output_format: str, caption_settings: Optional[CaptionSettings]):
     task_id = self.request.id
     logger.info(f"[Task {task_id}] Received task - Engine: {engine}, Format: {output_format}")
 
     output_dir = settings.output_audio_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    file_extension = output_format if output_format in ['mp3', 'wav'] else 'mp3'
+    file_extension = output_format # TODO: Add more formats later
     output_filename = f"{task_id}.{file_extension}"
     output_path = output_dir / output_filename
 
@@ -92,17 +94,33 @@ def generate_audio_task(self: Task, engine: str, text: str, engine_options: Opti
         minio_client.fput_object(bucket_name, output_filename, output_path.as_posix())
         output_url = f"{minio_public_endpoint}/{bucket_name}/{output_filename}"
 
-        # Delete local file after successful upload to MinIO
-        output_path.unlink()
-        
-        logger.info(f"[Task {task_id}] Task completed successfully. Output: {output_path}")
-        return {
+        result = {
             "output_path": str(output_path),
             "output_url": str(output_url),
             "engine": engine,
             "format": file_extension,
             "timestamp": time.time()
         }
+
+        # TODO: Add caption generation logic here
+        if caption_settings:
+            try:
+                subtitle_generator = SubtitleGenerator()
+                subtitle_path = output_path.with_suffix('.ass')
+                subtitle_generator.generate_subtitles(output_path.as_posix(), subtitle_path, caption_settings)
+                minio_client.fput_object(bucket_name, subtitle_path.name, subtitle_path.as_posix())
+                subtitle_url = f"{minio_public_endpoint}/{bucket_name}/{subtitle_path.name}"
+                result["subtitle_url"] = str(subtitle_url)
+            except Exception as e:
+                logger.error(f"[Task {task_id}] Subtitle generation failed: {e}", exc_info=True)
+                self.update_state(
+                    state=states.FAILURE,
+                    meta={'exc_type': type(e).__name__, 'exc_message': str(e)}
+                )
+                Ignore()
+        
+        logger.info(f"[Task {task_id}] Task completed successfully. Output: {output_path}")
+        return result
 
     except Ignore:
         raise
@@ -118,3 +136,6 @@ def generate_audio_task(self: Task, engine: str, text: str, engine_options: Opti
             }
         )
         raise
+    finally:
+        # Delete local file after successful upload to MinIO
+        output_path.unlink()

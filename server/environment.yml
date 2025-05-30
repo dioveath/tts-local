@@ -19,3 +19,4 @@ dependencies:
     - elevenlabs
     - kokoro_onnx
     - soundfile
+    - whisper

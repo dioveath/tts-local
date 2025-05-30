@@ -12,3 +12,4 @@ pyttsx3==2.98
 soundfile==0.13.1
 
 minio==7.2.0
+openai_whisper==20240930

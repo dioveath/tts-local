@@ -1,4 +1,4 @@
-FROM python:3.13.2-slim-bookworm AS model_downloader
+From python:3.11-slim-bookworm AS model_downloader
 
 RUN apt-get update && apt-get install -y --no-install-recommends wget \
   && rm -rf /var/lib/apt/lists/*
@@ -11,7 +11,12 @@ RUN mkdir -p ${TEMP_DIR_ARG} \
   && wget -nv --show-progress -P ${TEMP_DIR_ARG} https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin \
   && echo "Model download complete."
 
-FROM python:3.13.2-slim-bookworm
+FROM python:3.11-slim-bookworm
+
+RUN apt-get update && \
+    apt-get install -y ffmpeg && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
