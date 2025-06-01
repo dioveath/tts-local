@@ -74,7 +74,8 @@ async def submit_audio_generation(
                 payload.text,
                 engine_options_args,
                 payload.output_format,
-                caption_settings_args
+                caption_settings_args,
+                payload.webhook_url
             ],
         )
         task_id = task.id

@@ -2,6 +2,7 @@
 from typing import Dict, Optional
 import pyttsx3
 from celery import Task, states
+from celery.result import AsyncResult
 from celery.exceptions import Ignore
 import logging
 import pathlib
@@ -15,10 +16,11 @@ from app.config import settings
 from app.services.minio.minio_client import minio_client, minio_public_endpoint, bucket_name
 from app.services.subtitles.subtitle_generator import SubtitleGenerator
 from app.schemas import EngineOptions, CaptionSettings
+from app.utils.webhook import send_webhook_task
 
 logger = logging.getLogger(__name__)
 
-# pyttsx_engine = PyttsxModule()
+
 
 
 @celery_app.task(bind=True, name='app.tasks.generate_audio_task', acks_late=True)
@@ -41,13 +43,22 @@ def generate_audio_task(
     output_filename = f"{task_id}.{file_extension}"
     output_path = output_dir / output_filename
 
+    result = {
+        # "output_path": str(output_path),
+        "output_url": None,
+        "subtitle_url": None,
+        "engine": engine,
+        "format": file_extension
+    }
+
     try:
         self.update_state(state=states.STARTED)
         logger.info(f"[Task {task_id}] Generating audio with engine: {engine}")
                 
         if engine == "pyttsx3":
-            # pyttsx_engine.generate_audio(text, output_path.as_posix(), engine_options)
-            Ignore()
+            pyttsx_engine = PyttsxModule()
+            pyttsx_engine.generate_audio(text, output_path.as_posix(), engine_options)
+            # Ignore()
         # elif engine == "kokoro":
         #     kokoro_engine = KokoroAudio()
         #     voice = engine_options.get("voice", "am_michael") if engine_options else "am_michael"
@@ -75,13 +86,7 @@ def generate_audio_task(
         minio_client.fput_object(bucket_name, output_filename, output_path.as_posix())
         output_url = f"{minio_public_endpoint}/{bucket_name}/{output_filename}"
 
-        result = {
-            "output_path": str(output_path),
-            "output_url": str(output_url),
-            "engine": engine,
-            "format": file_extension,
-            "timestamp": time.time()
-        }
+        result["output_url"] = output_url
 
         # TODO: Add caption generation logic here
         if caption_settings:
@@ -101,6 +106,10 @@ def generate_audio_task(
                 Ignore()
         
         logger.info(f"[Task {task_id}] Task completed successfully. Output: {output_path}")
+        self.update_state(
+            state=states.SUCCESS,
+            meta=result
+        )
         return result
 
     except Ignore:
@@ -121,4 +130,14 @@ def generate_audio_task(
         # Delete local file after successful upload to MinIO
         if output_path.is_file():
             output_path.unlink()
-        
+
+        if webhook_url:
+            current_task_state = AsyncResult(task_id)
+            payload = {
+                "task_id": task_id,
+                "task_state": current_task_state.state,
+                "task_info": current_task_state.info,
+                "result": result
+            }
+            send_webhook_task(webhook_url, payload, task_id)
+            pass
