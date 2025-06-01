@@ -7,56 +7,30 @@ import logging
 import pathlib
 import time
 
-from app.audio_module.kokoro_module import KokoroAudio
+from app.audio_module.pyttsx_module import PyttsxModule
+# from app.audio_module.kokoro_module import KokoroAudio
+from app.audio_module.chatterbox_module import ChatterboxModule
 from app.celery_worker import celery_app
 from app.config import settings
 from app.services.minio.minio_client import minio_client, minio_public_endpoint, bucket_name
 from app.services.subtitles.subtitle_generator import SubtitleGenerator
 from app.schemas import EngineOptions, CaptionSettings
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-
-def _generate_pyttsx3(task: Task, text: str, engine_options: Optional[Dict], output_path: pathlib.Path):
-    logger.info(f"[Task {task.request.id}] Starting pyttsx3 generation for: {output_path}")
-    engine_options = engine_options or {}
-    try:
-        engine = pyttsx3.init()
-
-        rate = engine_options.get("rate")
-        if rate:
-            engine.setProperty('rate', int(rate))
-
-        volume = engine_options.get("volume")
-        if volume is not None:
-             engine.setProperty('volume', float(volume))
-
-        voice_id = engine_options.get("voice_id")
-        if voice_id:
-            voices = engine.getProperty('voices')
-            found_voice = next((v for v in voices if v.id == voice_id), None)
-            if found_voice:
-                 engine.setProperty('voice', found_voice.id)
-            else:
-                 logger.warning(f"[Task {task.request.id}] Voice ID '{voice_id}' not found. Using default.")
-
-        engine.save_to_file(text, str(output_path))
-        engine.runAndWait()
-        engine.stop()
-        logger.info(f"[Task {task.request.id}] pyttsx3 generation successful: {output_path}")
-
-    except Exception as e:
-        logger.error(f"[Task {task.request.id}] pyttsx3 generation failed: {e}", exc_info=True)
-        task.update_state(
-            state=states.FAILURE,
-            meta={'exc_type': type(e).__name__, 'exc_message': str(e)}
-        )
-        raise Ignore()
+# pyttsx_engine = PyttsxModule()
 
 
 @celery_app.task(bind=True, name='app.tasks.generate_audio_task', acks_late=True)
-def generate_audio_task(self: Task, engine: str, text: str, engine_options: Optional[EngineOptions], output_format: str, caption_settings: Optional[CaptionSettings]):
+def generate_audio_task(
+    self: Task, 
+    engine: str, 
+    text: str, 
+    engine_options: Optional[Dict], 
+    output_format: str, 
+    caption_settings: Optional[CaptionSettings],
+    webhook_url: Optional[str] = None
+):
     task_id = self.request.id
     logger.info(f"[Task {task_id}] Received task - Engine: {engine}, Format: {output_format}")
 
@@ -68,13 +42,20 @@ def generate_audio_task(self: Task, engine: str, text: str, engine_options: Opti
     output_path = output_dir / output_filename
 
     try:
+        self.update_state(state=states.STARTED)
+        logger.info(f"[Task {task_id}] Generating audio with engine: {engine}")
+                
         if engine == "pyttsx3":
-            _generate_pyttsx3(self, text, engine_options, output_path)
-        elif engine == "kokoro":
-            kokoro_engine = KokoroAudio()
+            # pyttsx_engine.generate_audio(text, output_path.as_posix(), engine_options)
+            Ignore()
+        # elif engine == "kokoro":
+        #     kokoro_engine = KokoroAudio()
+        #     voice = engine_options.get("voice", "am_michael") if engine_options else "am_michael"
+        #     kokoro_engine.generate_audio(text, output_path.as_posix(), voice=voice, voice_settings=engine_options)
+        elif engine == "chatterbox":
+            chatterbox_engine = ChatterboxModule()
             voice = engine_options.get("voice", "am_michael") if engine_options else "am_michael"
-            kokoro_engine.generate_audio(text, output_path.as_posix(), voice=voice, voice_settings=engine_options)
-            
+            chatterbox_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
         else:
             logger.error(f"[Task {task_id}] Unsupported engine specified: {engine}")
             self.update_state(
@@ -84,12 +65,12 @@ def generate_audio_task(self: Task, engine: str, text: str, engine_options: Opti
             raise Ignore()
 
         if not output_path.is_file():
-             logger.error(f"[Task {task_id}] Output file not found after generation: {output_path}")
-             self.update_state(
+            logger.error(f"[Task {task_id}] Output file not found after generation: {output_path}")
+            self.update_state(
                 state=states.FAILURE,
                 meta={'exc_type': 'FileNotFoundError', 'exc_message': f"Generated file missing: {output_path}"}
             )
-             raise Ignore()
+            raise Ignore()
 
         minio_client.fput_object(bucket_name, output_filename, output_path.as_posix())
         output_url = f"{minio_public_endpoint}/{bucket_name}/{output_filename}"
@@ -138,4 +119,6 @@ def generate_audio_task(self: Task, engine: str, text: str, engine_options: Opti
         raise
     finally:
         # Delete local file after successful upload to MinIO
-        output_path.unlink()
+        if output_path.is_file():
+            output_path.unlink()
+        

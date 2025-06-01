@@ -27,11 +27,12 @@ class CaptionSettings(BaseModel):
     timer: int
 
 class AudioGenerationRequest(BaseModel):
-    engine: Literal["pyttsx3", "kokoro"]
+    engine: Literal["chatterbox", "kokoro", "pyttsx3"]
     text: str = Field(..., min_length=1, description="Text to synthesize")
     engine_options: Optional[EngineOptions] = Field(default=None, description="Engine-specific options (e.g., voice_id, rate)")
-    output_format: Literal["mp3"] = Field(default="mp3", description="Desired output audio format") # TODO: Add more formats
+    output_format: Literal["wav"] = Field(default="wav", description="Desired output audio format") # TODO: Add more formats
     caption_settings: Optional[CaptionSettings] = Field(default=None, description="Caption settings for the audio")
+    webhook_url: Optional[str] = Field(default=None, description="Webhook URL to call upon task completion")
 
 
 class TaskSubmissionResponse(BaseModel):
@@ -44,4 +45,3 @@ class TaskStatusResponse(BaseModel):
     status: str = Field(..., description="Current status of the task (e.g., PENDING, STARTED, SUCCESS, FAILURE)")
     result: Union[Dict[str, Any], str, None] = Field(default=None, description="Result of the task if successful (e.g., {'output_path': ...}) or error details")
     error: Optional[str] = Field(default=None, description="Error message if the task failed")
-

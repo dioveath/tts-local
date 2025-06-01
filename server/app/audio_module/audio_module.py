@@ -16,7 +16,7 @@ class AudioModule(ABC):
 
     @abstractmethod
     def generate_audio(
-        self, text: str, file_path: str, voice: Optional[str], voice_settings: Optional[dict]
+        self, text: str, file_path: str, voice_settings: Optional[dict]
     ) -> AudioResult:
         pass
 

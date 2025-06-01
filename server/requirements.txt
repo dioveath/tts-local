@@ -7,9 +7,11 @@ pydantic==2.11.3
 pydantic_settings==2.9.1
 python-dotenv==1.1.0
 
-kokoro_onnx==0.4.8
-pyttsx3==2.98
-soundfile==0.13.1
-
 minio==7.2.0
 openai_whisper==20240930
+
+# kokoro_onnx==0.4.9
+# soundfile==0.13.1
+pyttsx3==2.98
+
+chatterbox-tts==0.1.1
