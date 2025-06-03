@@ -27,7 +27,7 @@ class CaptionSettings(BaseModel):
     timer: int
 
 class AudioGenerationRequest(BaseModel):
-    engine: Literal["chatterbox", "kokoro", "pyttsx3"]
+    engine: Literal["kokoro", "chatterbox", "pyttsx3"]
     text: str = Field(..., min_length=1, description="Text to synthesize")
     engine_options: Optional[EngineOptions] = Field(default=None, description="Engine-specific options (e.g., voice_id, rate)")
     output_format: Literal["wav"] = Field(default="wav", description="Desired output audio format") # TODO: Add more formats

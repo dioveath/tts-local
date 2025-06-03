@@ -9,8 +9,8 @@ import pathlib
 import time
 
 from app.audio_module.pyttsx_module import PyttsxModule
-# from app.audio_module.kokoro_module import KokoroAudio
-from app.audio_module.chatterbox_module import ChatterboxModule
+from app.audio_module.kokoro_module import KokoroAudio
+# from app.audio_module.chatterbox_module import ChatterboxModule
 from app.celery_worker import celery_app
 from app.config import settings
 from app.services.minio.minio_client import minio_client, minio_public_endpoint, bucket_name
@@ -59,14 +59,14 @@ def generate_audio_task(
             pyttsx_engine = PyttsxModule()
             pyttsx_engine.generate_audio(text, output_path.as_posix(), engine_options)
             # Ignore()
-        # elif engine == "kokoro":
-        #     kokoro_engine = KokoroAudio()
-        #     voice = engine_options.get("voice", "am_michael") if engine_options else "am_michael"
-        #     kokoro_engine.generate_audio(text, output_path.as_posix(), voice=voice, voice_settings=engine_options)
-        elif engine == "chatterbox":
-            chatterbox_engine = ChatterboxModule()
+        elif engine == "kokoro":
+            kokoro_engine = KokoroAudio()
             voice = engine_options.get("voice", "am_michael") if engine_options else "am_michael"
-            chatterbox_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
+            kokoro_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
+        # elif engine == "chatterbox":
+        #     chatterbox_engine = ChatterboxModule()
+        #     voice = engine_options.get("voice", "am_michael") if engine_options else "am_michael"
+        #     chatterbox_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
         else:
             logger.error(f"[Task {task_id}] Unsupported engine specified: {engine}")
             self.update_state(
