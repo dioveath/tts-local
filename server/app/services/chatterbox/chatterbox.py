@@ -1,3 +1,4 @@
+import os
 import torch
 import time
 import torchaudio as ta
@@ -8,6 +9,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+
 class ChatterboxGenerationConfig(BaseModel):
     text: str
     audio_prompt_path: Optional[str] = None
@@ -16,6 +19,8 @@ class ChatterboxGenerationConfig(BaseModel):
     temperature: Optional[float] = Field(0.8, ge=0.05, le=5.0)
 
 class ChatterboxService:
+    VOICES_DIR = os.path.join(os.path.dirname(__file__), "voices")
+
     def __init__(self) -> None:
         logger.info("Loading Chatterbox model...")
         start_time = time.time()
@@ -36,6 +41,8 @@ class ChatterboxService:
         load_time = end_time - start_time
         logger.info(f"Loaded Chatterbox model in {load_time:.2f} seconds")
 
+        self.voices_dir = os.path.join(os.path.dirname(__file__), "voices")
+
     def generate(self, output_path: str, generation_config: ChatterboxGenerationConfig):
         wav = self.model.generate(
             generation_config.text, 
@@ -46,8 +53,15 @@ class ChatterboxService:
         )
         ta.save(output_path, wav, self.model.sr)
 
+    @staticmethod
     def get_voices() -> list[str]:
-        return []
+        # find .wav files in voices folder, return the list excluding the .wav extension
+        if not os.path.isdir(ChatterboxService.VOICES_DIR):
+            logger.warning("Voices directory not found")
+            return []
+        voice_files = [f for f in os.listdir(ChatterboxService.VOICES_DIR) if f.endswith(".wav")]
+        voice_names = [os.path.splitext(f)[0] for f in voice_files]
+        return voice_names
 
 # text = "Ezreal and Jinx teamed up with Ahri, Yasuo, and Teemo to take down the enemy's Nexus in an epic late-game pentakill."
 # wav = model.generate(text)

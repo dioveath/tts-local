@@ -23,11 +23,25 @@ class ChatterboxModule(AudioModule):
     ) -> AudioResult:
         if voice_settings is None:
             voice_settings = {}
+        voice = voice_settings.get("voice", None)
         exaggeration = voice_settings.get("exaggeration", 0.25)
         cfg_weight = voice_settings.get("cfg_weight", 0.3)
         temperature = voice_settings.get("temperature", 0.8)
+
+        if voice is None:
+            audio_prompt_path = None
+        else:
+            voices = self.client.get_voices()
+            if voice in voices:                
+                audio_prompt_path = f"{ChatterboxService.VOICES_DIR}/{voice}.wav"
+            else:
+                audio_prompt_path = None
+                logger.warning(f"Voice {voice} not found, using default voice")
+                pass
+
         config = ChatterboxGenerationConfig(
             text=text, 
+            audio_prompt_path=audio_prompt_path,
             exaggeration=exaggeration, 
             cfg_weight=cfg_weight, 
             temperature=temperature

@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.schemas import AudioGenerationRequest, TaskSubmissionResponse, TaskStatusResponse
 from app.celery_worker import celery_app
 from celery.result import AsyncResult
+from typing import Literal
 from celery import states
 import uvicorn
 import logging
@@ -43,6 +44,27 @@ async def read_root():
 @app.get("/health", status_code=http_status.HTTP_200_OK, tags=["General"])
 async def health_check():
     return {"status": "ok"}
+
+@app.get("/voices", tags=["Audio Generation"])
+async def get_voices(engine: Literal["chatterbox"] = Query(..., description="The name of the engine to use for audio generation.")):
+    try:
+        if engine == "chatterbox":
+            from app.services.chatterbox.chatterbox import ChatterboxService
+            voices = ChatterboxService.get_voices()
+            return voices
+        else:
+            raise HTTPException(
+                status_code=http_status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported engine: {engine}"
+            )
+    except Exception as e:
+        logger.error(f"Failed to get voices: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get voices: {e}"
+        )
+        
+
 
 
 @app.post(
