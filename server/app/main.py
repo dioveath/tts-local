@@ -46,16 +46,16 @@ async def health_check():
     return {"status": "ok"}
 
 @app.get("/voices", tags=["Audio Generation"])
-async def get_voices(engine: Literal["kokoro"] = Query(..., description="The name of the engine to use for audio generation.")):
+async def get_voices(engine: Literal["chatterbox"] = Query(..., description="The name of the engine to use for audio generation.")):
     try:
-        # if engine == "chatterbox":
-        #     from app.services.chatterbox.chatterbox import ChatterboxService
-        #     voices = ChatterboxService.get_voices()
-        #     return voices
-        if engine == "kokoro":
-            from app.services.kokoro.kokoro import KokoroService
-            voices = KokoroService.get_voices()
+        if engine == "chatterbox":
+            from app.services.chatterbox.chatterbox import ChatterboxService
+            voices = ChatterboxService.get_voices()
             return voices
+        # if engine == "kokoro":
+        #     from app.services.kokoro.kokoro import KokoroService
+        #     voices = KokoroService.get_voices()
+        #     return voices
         else:
             raise HTTPException(
                 status_code=http_status.HTTP_400_BAD_REQUEST,
