@@ -24,16 +24,8 @@ class ChatterboxService:
         logger.info("Loading Chatterbox model...")
         start_time = time.time()
 
-        device = "cpu"
-        map_location = torch.device(device)
-
-        torch_load_original = torch.load
-        def patched_torch_load(*args, **kwargs):
-            if 'map_location' not in kwargs:
-                kwargs['map_location'] = map_location
-            return torch_load_original(*args, **kwargs)
-        torch.load = patched_torch_load
-
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        logger.info(f"Using device: {device}")
         self.model = ChatterboxTTS.from_pretrained(device=device)
 
         end_time = time.time()

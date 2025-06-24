@@ -57,19 +57,26 @@ services:
       - backend-api
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]    
 
-  frontend:
-    build:
-      context: ./client
-      dockerfile: Dockerfile.prod
-    restart: always
-    container_name: frontend-nginx
-    ports:
-      - 4101:80
-    networks:
-      - app-network
-    depends_on:
-      - backend-api
+  # frontend:
+  #   build:
+  #     context: ./client
+  #     dockerfile: Dockerfile.prod
+  #   restart: always
+  #   container_name: frontend-nginx
+  #   ports:
+  #     - 4101:80
+  #   networks:
+  #     - app-network
+  #   depends_on:
+  #     - backend-api
 
 networks:
   app-network:
