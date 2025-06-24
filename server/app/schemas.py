@@ -6,6 +6,10 @@ from typing import Literal, Dict, Any, Optional, Union
 class EngineOptions(BaseModel):
     voice: str = Field(..., description="Voice to use for synthesis")
 
+class KokoroOptions(EngineOptions):
+    speed: float = Field(default=1, description="Speed of the synthesis")
+    lang: str = Field(default="en-us", description="Language of the synthesis")
+
 class CaptionSettings(BaseModel):
     max_line_count: int
     max_line_length: int
@@ -29,7 +33,7 @@ class CaptionSettings(BaseModel):
 class AudioGenerationRequest(BaseModel):
     engine: Literal["kokoro", "chatterbox", "pyttsx3"]
     text: str = Field(..., min_length=1, description="Text to synthesize")
-    engine_options: Optional[EngineOptions] = Field(default=None, description="Engine-specific options (e.g., voice_id, rate)")
+    engine_options: Union[KokoroOptions, EngineOptions] = Field(default=None, description="Engine-specific options (e.g., voice_id, rate)")
     output_format: Literal["wav"] = Field(default="wav", description="Desired output audio format") # TODO: Add more formats
     caption_settings: Optional[CaptionSettings] = Field(default=None, description="Caption settings for the audio")
     webhook_url: Optional[str] = Field(default=None, description="Webhook URL to call upon task completion")

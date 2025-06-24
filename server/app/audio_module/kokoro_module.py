@@ -21,7 +21,12 @@ class KokoroAudio(AudioModule):
         speed = voice_settings.get("speed", 1)
         lang = voice_settings.get("lang", "en-us")
 
-        config = KokoroGenerationConfig(text=text, voice=voice)
+        print(f"KokoroAudio Settings")
+        print(f"voice: {voice}")
+        print(f"speed: {speed}")
+        print(f"lang: {lang}")
+
+        config = KokoroGenerationConfig(text=text, voice=voice, speed=speed, lang=lang)
         self.client.generate_audio(output_path=file_path, config=config)
 
     def get_voices(self) -> list[str]:

@@ -93,6 +93,8 @@ async def submit_audio_generation(
         caption_settings_args = payload.caption_settings.model_dump(mode='json') if payload.caption_settings else None
         engine_options_args = payload.engine_options.model_dump(mode='json') if payload.engine_options else None
 
+        print(engine_options_args)
+
         task = celery_app.send_task(
             'app.tasks.generate_audio_task',
             args=[
