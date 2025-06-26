@@ -38,6 +38,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip uninstall -y onnxruntime onnxruntime-gpu
 RUN pip install onnxruntime-gpu
 
+
+
 COPY . .
 
 # ARG KOKORO_MODEL_DIR_ARG=/app/app/services/kokoro

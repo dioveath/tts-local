@@ -43,7 +43,7 @@ class SubtitleGenerator:
             whisper.Whisper: The loaded Whisper model.
         """
         logger.info(f"Loading Whisper model '{self.model_size}' for subtitle generation...")
-        return whisper.load_model(self.model_size)
+        return whisper.load_model(self.model_size, device="cpu")
 
     def generate_subtitles(
         self,
