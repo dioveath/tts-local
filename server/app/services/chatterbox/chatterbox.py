@@ -24,9 +24,9 @@ class ChatterboxService:
         logger.info("Loading Chatterbox model...")
         start_time = time.time()
 
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        logger.info(f"Using device: {device}")
-        self.model = ChatterboxTTS.from_pretrained(device=device)
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        logger.info(f"Using device: {self.device}")
+        self.model = ChatterboxTTS.from_pretrained(device=self.device)
 
         end_time = time.time()
         load_time = end_time - start_time
@@ -35,14 +35,22 @@ class ChatterboxService:
         self.voices_dir = os.path.join(os.path.dirname(__file__), "voices")
 
     def generate(self, output_path: str, generation_config: ChatterboxGenerationConfig):
-        wav = self.model.generate(
-            generation_config.text, 
-            audio_prompt_path=generation_config.audio_prompt_path, 
-            exaggeration=generation_config.exaggeration, 
-            cfg_weight=generation_config.cfg_weight, 
-            temperature=generation_config.temperature
-        )
+        with torch.no_grad():
+            wav = self.model.generate(
+                generation_config.text, 
+                audio_prompt_path=generation_config.audio_prompt_path, 
+                exaggeration=generation_config.exaggeration, 
+                cfg_weight=generation_config.cfg_weight, 
+                temperature=generation_config.temperature
+            )
+
         ta.save(output_path, wav, self.model.sr)
+        logger.info(f"Saved generated audio to {output_path}")
+
+        if (self.device == "cuda"):
+            del wav
+            torch.cuda.empty_cache()
+            logger.info(f"Cleaned up GPU VRAM after generation")
 
     @staticmethod
     def get_voices() -> list[str]:

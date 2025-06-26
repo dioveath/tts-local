@@ -6,6 +6,15 @@ from typing import Literal, Dict, Any, Optional, Union
 class EngineOptions(BaseModel):
     voice: str = Field(..., description="Voice to use for synthesis")
 
+class KokoroOptions(EngineOptions):
+    speed: float = Field(default=1, description="Speed of the synthesis")
+    lang: str = Field(default="en-us", description="Language of the synthesis")
+
+class ChatterboxOptions(EngineOptions):
+    exaggeration: Optional[float] = Field(0.5, ge=0.25, le=2.0, description="Exaggeration of the synthesis")
+    cfg_weight: Optional[float] = Field(0.3, ge=0.2, le=1.0, description="CFG weight of the synthesis")
+    temperature: Optional[float] = Field(0.8, ge=0.05, le=5.0, description="Temperature of the synthesis")
+
 class CaptionSettings(BaseModel):
     max_line_count: int
     max_line_length: int
@@ -27,9 +36,9 @@ class CaptionSettings(BaseModel):
     timer: int
 
 class AudioGenerationRequest(BaseModel):
-    engine: Literal["kokoro", "chatterbox", "pyttsx3"]
+    engine: Literal["chatterbox", "kokoro", "pyttsx3"]
     text: str = Field(..., min_length=1, description="Text to synthesize")
-    engine_options: Optional[EngineOptions] = Field(default=None, description="Engine-specific options (e.g., voice_id, rate)")
+    engine_options: Union[ChatterboxOptions, KokoroOptions, EngineOptions] = Field(default=None, description="Engine-specific options (e.g., voice_id, rate)")
     output_format: Literal["wav"] = Field(default="wav", description="Desired output audio format") # TODO: Add more formats
     caption_settings: Optional[CaptionSettings] = Field(default=None, description="Caption settings for the audio")
     webhook_url: Optional[str] = Field(default=None, description="Webhook URL to call upon task completion")

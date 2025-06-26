@@ -65,7 +65,7 @@ def generate_audio_task(
         #     kokoro_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
         elif engine == "chatterbox":
             chatterbox_engine = ChatterboxModule()
-            voice = engine_options.get("voice", "am_michael") if engine_options else "am_michael"
+            voice = engine_options.get("voice", "hero") if engine_options else "hero"
             chatterbox_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
         else:
             logger.error(f"[Task {task_id}] Unsupported engine specified: {engine}")
