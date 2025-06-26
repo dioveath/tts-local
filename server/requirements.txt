@@ -10,7 +10,8 @@ python-dotenv==1.1.0
 minio==7.2.0
 openai_whisper==20240930
 
-kokoro_onnx==0.4.9
+kokoro_onnx[gpu]==0.4.9
+onnxruntime-gpu==1.22.0
 soundfile==0.13.1
 pyttsx3==2.98
 

@@ -28,10 +28,15 @@ WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV ONNX_PROVIDER CUDAExecutionProvider
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
+
+# workaround for CUDAExecutionProvider not found
+RUN pip uninstall -y onnxruntime onnxruntime-gpu
+RUN pip install onnxruntime-gpu
 
 COPY . .
 
