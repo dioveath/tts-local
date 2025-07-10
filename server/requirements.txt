@@ -1,3 +1,9 @@
+--index-url https://pypi.org/simple
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch
+torchvision
+torchaudio
+
 fastapi==0.115.12
 uvicorn[standard]==0.34.2
 celery[redis]==5.5.1
@@ -8,11 +14,14 @@ pydantic-settings==2.9.1
 python-dotenv==1.1.0
 
 minio==7.2.0
-openai-whisper==20250625
 
 kokoro-onnx[gpu]==0.4.9
 onnxruntime-gpu==1.22.0
 soundfile==0.13.1
+
 pyttsx3==2.98
 
 # chatterbox-tts==0.1.1
+
+openai-whisper==20250625
+

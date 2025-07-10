@@ -24,7 +24,7 @@ class SubtitleGenerator:
     """
 
     def __init__(self):
-        self.model_size = "tiny"
+        self.model_size = "turbo"
         self.language = "en"
         self.max_line_count = 1
         self.max_line_length = 20
@@ -43,7 +43,7 @@ class SubtitleGenerator:
             whisper.Whisper: The loaded Whisper model.
         """
         logger.info(f"Loading Whisper model '{self.model_size}' for subtitle generation...")
-        return whisper.load_model(self.model_size, device="cpu")
+        return whisper.load_model(self.model_size, device="cuda")
 
     def generate_subtitles(
         self,
