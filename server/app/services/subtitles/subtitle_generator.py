@@ -2,6 +2,7 @@
 
 import json
 import os
+import torch
 from typing import Optional
 import logging
 
@@ -44,6 +45,15 @@ class SubtitleGenerator:
         """
         logger.info(f"Loading Whisper model '{self.model_size}' for subtitle generation...")
         return whisper.load_model(self.model_size, device="cuda")
+
+    def unload_model(self):
+        if hasattr(self, "model") and self.model is not None:
+            try:
+                del self.model
+                torch.cuda.empty_cache()
+                logger.info(f"Whisper model has been successfully unloaded!")
+            except Exception as e:
+                logger.info(f"Error unloading Whisper model: {e}", exc_info=True)
 
     def generate_subtitles(
         self,

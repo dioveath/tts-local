@@ -90,6 +90,7 @@ def generate_audio_task(
 
         # TODO: Add caption generation logic here
         if caption_settings:
+            subtitle_generator = None
             try:
                 subtitle_generator = SubtitleGenerator()
                 subtitle_path = output_path.with_suffix('.ass')
@@ -104,6 +105,9 @@ def generate_audio_task(
                     meta={'exc_type': type(e).__name__, 'exc_message': str(e)}
                 )
                 Ignore()
+            finally:
+                if subtitle_generator:
+                    subtitle_generator.unload_model()
         
         logger.info(f"[Task {task_id}] Task completed successfully. Output: {output_path}")
         self.update_state(

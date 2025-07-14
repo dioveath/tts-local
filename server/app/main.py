@@ -69,8 +69,6 @@ async def get_voices(engine: Literal["kokoro"] = Query(..., description="The nam
         )
         
 
-
-
 @app.post(
     "/generate/audio",
     response_model=TaskSubmissionResponse,
