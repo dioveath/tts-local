@@ -25,7 +25,7 @@ class SubtitleGenerator:
     """
 
     def __init__(self):
-        self.model_size = "turbo"
+        self.model_size = "small"
         self.language = "en"
         self.max_line_count = 1
         self.max_line_length = 20
@@ -49,6 +49,7 @@ class SubtitleGenerator:
     def unload_model(self):
         if hasattr(self, "model") and self.model is not None:
             try:
+                self.model.cpu()
                 del self.model
                 torch.cuda.empty_cache()
                 logger.info(f"Whisper model has been successfully unloaded!")

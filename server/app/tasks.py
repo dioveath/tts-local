@@ -7,6 +7,7 @@ from celery.exceptions import Ignore
 import logging
 import pathlib
 import time
+import gc
 
 from app.audio_module.pyttsx_module import PyttsxModule
 from app.audio_module.kokoro_module import KokoroAudio
@@ -51,18 +52,19 @@ def generate_audio_task(
         "format": file_extension
     }
 
+    audio_engine = None
+
     try:
         self.update_state(state=states.STARTED)
         logger.info(f"[Task {task_id}] Generating audio with engine: {engine}")
                 
         if engine == "pyttsx3":
-            pyttsx_engine = PyttsxModule()
-            pyttsx_engine.generate_audio(text, output_path.as_posix(), engine_options)
+            audio_engine = PyttsxModule()
+            audio_engine.generate_audio(text, output_path.as_posix(), engine_options)
             # Ignore()
         elif engine == "kokoro":
-            kokoro_engine = KokoroAudio()
-            voice = engine_options.get("voice", "am_michael") if engine_options else "am_michael"
-            kokoro_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
+            audio_engine = KokoroAudio()
+            audio_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
         # elif engine == "chatterbox":
         #     chatterbox_engine = ChatterboxModule()
         #     voice = engine_options.get("voice", "am_michael") if engine_options else "am_michael"
@@ -108,6 +110,8 @@ def generate_audio_task(
             finally:
                 if subtitle_generator:
                     subtitle_generator.unload_model()
+                    del subtitle_generator
+                    gc.collect()
         
         logger.info(f"[Task {task_id}] Task completed successfully. Output: {output_path}")
         self.update_state(
@@ -134,6 +138,10 @@ def generate_audio_task(
         # Delete local file after successful upload to MinIO
         if output_path.is_file():
             output_path.unlink()
+        
+        if audio_engine:
+            del audio_engine
+            gc.collect()
 
         if webhook_url:
             current_task_state = AsyncResult(task_id)
