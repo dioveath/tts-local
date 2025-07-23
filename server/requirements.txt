@@ -1,9 +1,3 @@
---index-url https://pypi.org/simple
---extra-index-url https://download.pytorch.org/whl/cu128
-torch
-torchvision
-torchaudio
-
 fastapi==0.115.12
 uvicorn[standard]==0.34.2
 celery[redis]==5.5.1
@@ -21,7 +15,7 @@ soundfile==0.13.1
 
 pyttsx3==2.98
 
-# chatterbox-tts==0.1.1
+chatterbox-tts==0.1.2
 
 openai-whisper==20250625
 

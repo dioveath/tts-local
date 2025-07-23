@@ -21,19 +21,11 @@ class KokoroGenerationConfig(BaseModel):
 
 class KokoroService:
     def __init__(self) -> None:
-        try:
-            self.kokoro = Kokoro(
-                "app/services/kokoro/kokoro-v1.0.onnx",
-                "app/services/kokoro/voices-v1.0.bin",
-                providers=['CUDAExecutionProvider']
-            )
-            print(f"Loaded Kokoro model with CUDA")
-        except Exception as e:
-            self.kokoro = Kokoro(
-                "app/services/kokoro/kokoro-v1.0.onnx",
-                "app/services/kokoro/voices-v1.0.bin",
-            )
-            print(f"Loaded Kokoro model with CPU")
+        self.kokoro = Kokoro(
+            "app/services/kokoro/kokoro-v1.0.onnx",
+            "app/services/kokoro/voices-v1.0.bin",
+        )
+        print(f"Loaded Kokoro model")
 
     def generate_audio(self, output_path: str, config: KokoroGenerationConfig):        
         print(f"Generating audio with Kokoro: {config.model_dump(mode='json')}")

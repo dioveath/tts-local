@@ -37,7 +37,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     container_name: celery-worker
-    command: celery -A app.celery_worker worker --loglevel=info -c 2
+    command: celery -A app.celery_worker worker --loglevel=info --concurrency=1 --max-tasks-per-child=1
     volumes:
       - ./server:/app
     environment:

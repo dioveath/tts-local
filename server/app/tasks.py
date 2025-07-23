@@ -1,23 +1,20 @@
 # app/tasks.py
 from typing import Dict, Optional
-import pyttsx3
 from celery import Task, states
 from celery.result import AsyncResult
 from celery.exceptions import Ignore
 import logging
-import pathlib
-import time
 import gc
 import os
 
 from app.audio_module.pyttsx_module import PyttsxModule
 from app.audio_module.kokoro_module import KokoroAudio
-# from app.audio_module.chatterbox_module import ChatterboxModule
+from app.audio_module.chatterbox_module import ChatterboxModule
 from app.celery_worker import celery_app
 from app.config import settings
 from app.services.minio.minio_client import minio_client, minio_public_endpoint, bucket_name
 from app.services.subtitles.subtitle_generator import SubtitleGenerator
-from app.schemas import EngineOptions, CaptionSettings
+from app.schemas import CaptionSettings
 from app.utils.webhook import send_webhook_task
 
 logger = logging.getLogger(__name__)
@@ -46,7 +43,6 @@ def generate_audio_task(
     output_path = output_dir / output_filename
 
     result = {
-        # "output_path": str(output_path),
         "output_url": None,
         "subtitle_url": None,
         "engine": engine,
@@ -62,14 +58,12 @@ def generate_audio_task(
         if engine == "pyttsx3":
             audio_engine = PyttsxModule()
             audio_engine.generate_audio(text, output_path.as_posix(), engine_options)
-            # Ignore()
         elif engine == "kokoro":
             audio_engine = KokoroAudio()
             audio_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
-        # elif engine == "chatterbox":
-        #     chatterbox_engine = ChatterboxModule()
-        #     voice = engine_options.get("voice", "am_michael") if engine_options else "am_michael"
-        #     chatterbox_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
+        elif engine == "chatterbox":
+            chatterbox_engine = ChatterboxModule()
+            chatterbox_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
         else:
             logger.error(f"[Task {task_id}] Unsupported engine specified: {engine}")
             self.update_state(
