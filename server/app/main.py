@@ -46,7 +46,7 @@ async def health_check():
     return {"status": "ok"}
 
 @app.get("/voices", tags=["Audio Generation"])
-async def get_voices(engine: Literal["kokoro"] = Query(..., description="The name of the engine to use for audio generation.")):
+async def get_voices(engine: Literal["kokoro", "other"] = Query(..., description="The name of the engine to use for audio generation.")):
     try:
         # if engine == "chatterbox":
         #     from app.services.chatterbox.chatterbox import ChatterboxService

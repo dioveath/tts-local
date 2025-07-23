@@ -8,6 +8,7 @@ import logging
 import pathlib
 import time
 import gc
+import os
 
 from app.audio_module.pyttsx_module import PyttsxModule
 from app.audio_module.kokoro_module import KokoroAudio
@@ -136,8 +137,11 @@ def generate_audio_task(
         raise
     finally:
         # Delete local file after successful upload to MinIO
-        if output_path.is_file():
-            output_path.unlink()
+        if output_path:
+            try:
+                os.remove(output_path)
+            except OSError as e:
+                logger.error(f"[Task {task_id}] Failed to delete local file {output_path}: {e}", exc_info=True)
         
         if audio_engine:
             del audio_engine
