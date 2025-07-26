@@ -1,6 +1,7 @@
 from typing import Dict, Optional
 from app.audio_module.audio_module import AudioModule, AudioResult
 from app.services.kokoro.kokoro import KokoroGenerationConfig, KokoroService
+from app.utils.audio_utils import get_audio_duration
 
 
 class KokoroAudio(AudioModule):
@@ -28,6 +29,10 @@ class KokoroAudio(AudioModule):
 
         config = KokoroGenerationConfig(text=text, voice=voice, speed=speed, lang=lang)
         self.client.generate_audio(output_path=file_path, config=config)
+        return AudioResult(
+            file_path=file_path,
+            length=get_audio_duration(file_path),
+        )
 
     def get_voices(self) -> list[str]:
         return KokoroService.get_voices()

@@ -2,11 +2,14 @@ from typing import Optional, Dict
 from app.audio_module.audio_module import AudioModule, AudioResult
 from app.services.chatterbox.chatterbox import ChatterboxService, ChatterboxGenerationConfig
 from app.utils.text_utils import split_text_into_chunks
+from app.utils.audio_utils import get_audio_duration
 import subprocess
 import tempfile
 import os
 import uuid
 import logging
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +74,7 @@ class ChatterboxModule(AudioModule):
         for temp_file in temp_files:
             os.remove(temp_file) 
         
-        return AudioResult(file_path=file_path, length=0)
+        return AudioResult(file_path=file_path, length=get_audio_duration(file_path))
 
     def _combine_audio_files(self, input_files: list[str], output_file: str):
         try:
