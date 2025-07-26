@@ -20,8 +20,6 @@ from app.utils.webhook import send_webhook_task
 logger = logging.getLogger(__name__)
 
 
-
-
 @celery_app.task(bind=True, name='app.tasks.generate_audio_task', acks_late=True)
 def generate_audio_task(
     self: Task, 
@@ -50,6 +48,7 @@ def generate_audio_task(
     }
 
     audio_engine = None
+    audio_result = None
 
     try:
         self.update_state(state=states.STARTED)
@@ -60,10 +59,10 @@ def generate_audio_task(
             audio_engine.generate_audio(text, output_path.as_posix(), engine_options)
         elif engine == "kokoro":
             audio_engine = KokoroAudio()
-            audio_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
+            audio_result = audio_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
         elif engine == "chatterbox":
             chatterbox_engine = ChatterboxModule()
-            chatterbox_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
+            audio_result = chatterbox_engine.generate_audio(text, output_path.as_posix(), voice_settings=engine_options)
         else:
             logger.error(f"[Task {task_id}] Unsupported engine specified: {engine}")
             self.update_state(
@@ -84,6 +83,7 @@ def generate_audio_task(
         output_url = f"{minio_public_endpoint}/{bucket_name}/{output_filename}"
 
         result["output_url"] = output_url
+        result["audio_duration"] = audio_result.length
 
         # TODO: Add caption generation logic here
         if caption_settings:
