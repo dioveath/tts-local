@@ -3,9 +3,11 @@ from typing import Dict, Optional
 from celery import Task, states
 from celery.result import AsyncResult
 from celery.exceptions import Ignore
+from pathlib import Path
 import logging
 import gc
 import os
+
 
 from app.audio_module.pyttsx_module import PyttsxModule
 from app.audio_module.kokoro_module import KokoroAudio
@@ -113,7 +115,6 @@ def generate_audio_task(
             state=states.SUCCESS,
             meta=result
         )
-        return result
 
     except Ignore:
         raise
@@ -130,13 +131,16 @@ def generate_audio_task(
         )
         raise
     finally:
+        logger.info(f"[Task {task_id}] Cleaning up resources and sending webhook")
+        logger.info(f"Worker CMD: {Path.cwd()}")
         # Delete local file after successful upload to MinIO
         if output_path:
             try:
-                os.remove(output_path)
-            except OSError as e:
+                output_path.unlink()
+                logger.info(f"[Task {task_id}] Deleted local file {output_path}")
+            except Exception as e:
                 logger.error(f"[Task {task_id}] Failed to delete local file {output_path}: {e}", exc_info=True)
-        
+
         if audio_engine:
             del audio_engine
             gc.collect()
@@ -151,3 +155,5 @@ def generate_audio_task(
             }
             send_webhook_task(webhook_url, payload, task_id)
             pass
+    
+    return result
