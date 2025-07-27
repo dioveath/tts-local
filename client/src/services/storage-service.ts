@@ -4,7 +4,7 @@
 export interface Generation {
   id: string
   name: string
-  url: string
+  url?: string
   createdAt: string
 }
 
@@ -24,6 +24,14 @@ export const StorageService = {
     const generations = this.getGenerations()
     generations.unshift(generation)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(generations))
+  },
+  updateGeneration(generation: Generation) {
+    const generations = this.getGenerations()
+    const index = generations.findIndex((g) => g.id === generation.id)
+    if (index !== -1) {
+      generations[index] = generation
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(generations))
+    }
   },
   removeGeneration(id: string) {
     const generations = this.getGenerations().filter((g) => g.id !== id)

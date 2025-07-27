@@ -1,7 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { Resolver, useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 
 import { toast } from 'sonner'
@@ -25,8 +25,10 @@ import {
   BreadcrumbPage
 } from '@/components/ui/breadcrumb'
 import { StorageService } from '@/services/storage-service'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Slider } from '@/components/ui/slider'
 
-const FormSchema = z.object({
+const BaseSchema = z.object({
   text: z
     .string()
     .min(1, {
@@ -37,13 +39,45 @@ const FormSchema = z.object({
     })
 })
 
+const FormSchema = z.discriminatedUnion('engine', [
+  BaseSchema.extend({
+    engine: z.literal('kokoro'),
+    engine_options: z.object({
+      voice: z.enum(['am_adam', 'am_michael', 'af_bella']).default('am_adam'),
+      speed: z.number().min(0.5).max(2).default(1)
+    })
+  }),
+  BaseSchema.extend({
+    engine: z.literal('chatterbox'),
+    engine_options: z.object({
+      voice: z.enum(['arnold', 'edgar', 'elias', 'hero']).default('arnold'),
+      exaggeration: z.number().min(0.25).max(2).default(0.5),
+      cfg_weight: z.number().min(0.2).max(1).default(0.3),
+      temperature: z.number().min(0.05).max(5).default(0.8)
+    })
+  })
+])
+
 export function HomePage() {
   const [isLoading, setLoading] = useState(false)
   const [lastGeneratedId, setLastGeneratedId] = useState<string | null>(null)
   const [open, setOpen] = useState(true)
 
   const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema)
+    resolver: zodResolver(FormSchema) as Resolver<z.infer<typeof FormSchema>>,
+    defaultValues: {
+      text: 'Welcome to the TTS Local project',
+      engine: 'kokoro',
+      engine_options: {
+        voice: 'am_adam',
+        speed: 1
+      }
+    }
+  })
+
+  const selectedEngine = useWatch({
+    control: form.control,
+    name: 'engine'
   })
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
@@ -51,7 +85,8 @@ export function HomePage() {
       setLoading(true)
       const request: AudioGenerationRequest = {
         text: data.text,
-        engine: 'kokoro'
+        engine: data.engine,
+        engine_options: data.engine_options
       }
 
       const statusResponse = await ApiService.generateAudio(request)
@@ -59,7 +94,6 @@ export function HomePage() {
         id: statusResponse.task_id,
         name: data.text.substring(0, 20) + '...',
         createdAt: new Date().toISOString(),
-        url: ApiService.getDownloadAudioUrl(statusResponse.task_id)
       })
       toast.success(`You submitted the following values: ${JSON.stringify(data)}`)
       setLastGeneratedId(statusResponse.task_id)
@@ -108,6 +142,148 @@ export function HomePage() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name='engine'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel> Engine </FormLabel>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an engine" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="kokoro">Kokoro</SelectItem>
+                          <SelectItem value="chatterbox">Chatterbox</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormDescription>Select the engine to use</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              { selectedEngine === "kokoro" && (
+                <>
+                <FormField
+                  control={form.control}
+                  name="engine_options.voice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel> Voice </FormLabel>
+                      <FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a voice" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="am_adam">Adam</SelectItem>
+                            <SelectItem value="am_michael">Michael</SelectItem>
+                            <SelectItem value="af_bella">Bella</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormDescription>Select the voice to use</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="engine_options.speed"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel> Speed: {field.value} </FormLabel>
+                      <FormControl>
+                        <Slider defaultValue={[field.value]} min={0.5} max={2} step={0.1} onValueChange={(value: number[]) => field.onChange(value[0])} />
+                      </FormControl>
+                      <FormDescription>Select the speed to use</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                </>
+              )}
+
+              { selectedEngine === "chatterbox" && (
+                <>
+                <FormField
+                  control={form.control}
+                  name="engine_options.voice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel> Voice </FormLabel>
+                      <FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={"arnold"}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a voice" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="arnold">Arnold</SelectItem>
+                            <SelectItem value="edgar">Edgar</SelectItem>
+                            <SelectItem value="elias">Elias</SelectItem>
+                            <SelectItem value="hero">Hero</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormDescription>Select the voice to use</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="engine_options.exaggeration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel> Exaggeration: {field.value} </FormLabel>
+                      <FormControl>
+                        <Slider defaultValue={[0.5]} min={0.25} max={2} step={0.1} onValueChange={(value: number[]) => field.onChange(value[0])} />
+                      </FormControl>
+                      <FormDescription>Select the exaggeration to use</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="engine_options.cfg_weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel> CFG Weight: {field.value} </FormLabel>
+                      <FormControl>
+                        <Slider defaultValue={[0.3]} min={0.2} max={1} step={0.05} onValueChange={(value: number[]) => field.onChange(value[0])} />
+                      </FormControl>
+                      <FormDescription>Select the cfg weight to use</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="engine_options.temperature"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel> Temperature: {field.value} </FormLabel>
+                      <FormControl>
+                        <Slider defaultValue={[0.8]} min={0.05} max={5} step={0.1} onValueChange={(value: number[]) => field.onChange(value[0])} />
+                      </FormControl>
+                      <FormDescription>Select the temperature to use</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                </>
+              )}
+
               <Button type="submit">
                 {isLoading ? <RotateCw className="mr-2 h-4 w-4 animate-spin" /> : 'Generate Audio'}
               </Button>

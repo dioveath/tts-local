@@ -1,7 +1,7 @@
 import { AudioGenerationRequest, TaskStatusResponse, TaskSubmissionResponse } from '@/types/global.types'
 import axios, { AxiosError } from 'axios'
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8100'
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4100'
 
 console.log('Were using api here:', API_URL)
 

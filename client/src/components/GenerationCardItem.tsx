@@ -3,6 +3,7 @@ import { ApiService } from '@/services/api-service'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Download } from 'lucide-react'
+import { StorageService } from '@/services/storage-service'
 
 interface GenerationCardItemProps {
   generationId: string
@@ -29,8 +30,16 @@ const GenerationCardItem: React.FC<GenerationCardItemProps> = ({ generationId, t
         if (!cancelled) {
           setStatus(response.status)
           if (response.status === 'SUCCESS') {
-            const url = ApiService.getDownloadAudioUrl(taskId)
+            // const url = ApiService.getDownloadAudioUrl(taskId)
+            const url = response.result?.output_url
             setAudioUrl(url)
+            const currentGeneration = StorageService.getGenerations().find((g) => g.id === generationId)
+            if (currentGeneration) {
+              StorageService.updateGeneration({
+                ...currentGeneration,
+                url,
+              })
+            }
             setLoading(false)
             clearInterval(interval)
           } else if (response.status === 'FAILED') {

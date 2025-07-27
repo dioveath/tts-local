@@ -1,8 +1,10 @@
 export interface AudioGenerationRequest {
-  engine: 'pyttsx3' | 'kokoro'
+  engine: 'kokoro' | 'chatterbox'
   text: string
   engine_options?: Record<string, any> | null
-  output_format?: 'mp3' | 'wav'
+  output_format?: 'wav'
+  caption_settings?: CaptionSettings
+  webhook_url?: string
 }
 
 export interface ValidationError {
@@ -19,6 +21,28 @@ export interface TaskSubmissionResponse {
 export interface TaskStatusResponse {
   task_id: string
   status: string
-  result?: Record<string, any> | string | null
+  result?: any
   error?: string | null
+}
+
+
+export interface CaptionSettings {
+    max_line_count: number
+    max_line_length: number
+    font_name: string
+    font_size: number
+    primary_colour: string
+    secondary_colour: string
+    outline_colour: string
+    back_colour: string
+    bold: number
+    italic: number
+    underline: number
+    strikeout: number
+    outline: number
+    border_style: number
+    alignment: number
+    playres_x: number
+    playres_y: number
+    timer: number  
 }

@@ -79,21 +79,21 @@ export function NavGenerations({ generations }: { generations: Generation[] }) {
                 side={isMobile ? 'bottom' : 'right'}
                 align={isMobile ? 'end' : 'start'}
               >
-                <DropdownMenuItem onClick={() => handleDownload(item.url)}>
+                <DropdownMenuItem onClick={() => handleDownload(item.url ?? '')} disabled={!item.url}>
                   <Download className="text-muted-foreground" />
                   <span>Download</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleCopy(item.url)}>
+                <DropdownMenuItem onClick={() => handleCopy(item.url ?? '')} disabled={!item.url}>
                   <Link className="text-muted-foreground" />
                   <span>Copy Link</span>
                 </DropdownMenuItem>
                 {playingUrl === item.url ? (
-                  <DropdownMenuItem onClick={() => handlePreview(item.url)}>
+                  <DropdownMenuItem onClick={() => handlePreview(item.url ?? '')} disabled={!item.url}>
                     <Pause className="text-muted-foreground" />
                     <span>Stop</span>
                   </DropdownMenuItem>
                 ) : (
-                  <DropdownMenuItem onClick={() => handlePreview(item.url)}>
+                  <DropdownMenuItem onClick={() => handlePreview(item.url ?? '')} disabled={!item.url}>
                     <Play className="text-muted-foreground" />
                     <span>Preview</span>
                   </DropdownMenuItem>
